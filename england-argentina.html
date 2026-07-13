@@ -397,8 +397,10 @@ function changeFormation(key) {
   if (!FORMATIONS[key] || key === state.formation) return;
   state.formation = key;
   state.slots = [];
+  state.activeTab = "gk";
   rebuildSlots();
   renderFormationOptions();
+  renderTabs();
   renderAllPanels();
   renderPitch();
   updateProgress();
@@ -536,7 +538,7 @@ function renderPitch() {
 function filledDot(player, pos, slotIndex) {
   const lastName = getLastName(player.name);
   const _nm = lastName.includes("-") ? lastName.replace(/-/g, "-<br>") : lastName;
-  const borderColor = player.country === "en" ? "#e30613" : "#7dd3fc";
+  const borderColor = player.country === "en" ? "#1e3a5f" : "#7dd3fc";
   const circleStyle = player.photo
     ? `background-image:url('${player.photo}');background-size:cover;background-position:center top`
     : `background:${player.country === "en" ? "var(--en-color)" : "var(--ar-color)"}`;
