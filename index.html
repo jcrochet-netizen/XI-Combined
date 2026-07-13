@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>XI Combined France-Espagne | Compose ton équipe mixte pour la Coupe du Monde 2026</title>
+<meta name="description" content="Mélange les meilleurs joueurs de la France et de l'Espagne pour composer ton XI idéal de la Coupe du Monde 2026. Vote pour chaque poste !">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#ffffff;--card:#f5f5f5;--card-hover:#eaeaea;--card-selected-fr:#dbeafe;--card-selected-es:#fee2e2;
+  --accent:#6d28d9;--accent-dark:#5b21b6;--accent-light:#7c3aed;
+  --text:#1a1a1a;--text-muted:#777;
+  --pitch-green:#2d6a30;--pitch-dark:#1e5420;--pitch-line:rgba(255,255,255,.35);
+  --pos-gk:#1e88e5;--pos-def:#1a1a1a;--pos-mid:#f9a825;--pos-att:#c62828;
+  --fr-blue:#1e3a8a;--fr-bg:#dbeafe;--fr-border:#3b82f6;
+  --es-red:#b91c1c;--es-bg:#fee2e2;--es-border:#ef4444;
+  --done-bg:#d4edda;--done-text:#1e7e34;
+  --radius:10px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.4}
+
+#squad-widget{display:flex;gap:24px;width:100%;max-width:860px;margin:0 auto;padding:20px;align-items:flex-start}
+.selector-panel{flex:1;min-width:0}
+.pitch-panel{width:340px;flex-shrink:0;position:sticky;top:20px}
+
+/* Header */
+.widget-header{text-align:center;margin-bottom:18px}
+.widget-header h1{font-size:1.15rem;font-weight:800;letter-spacing:.3px;line-height:1.3}
+.widget-header h1 .fr{color:var(--fr-blue)}
+.widget-header h1 .es{color:var(--es-red)}
+.widget-header h1 .x{color:var(--accent)}
+.widget-header p{font-size:.78rem;color:var(--text-muted);margin-top:4px}
+
+/* Formation selector */
+.formation-bar{margin-bottom:16px}
+.formation-label{font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.formation-options{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.formation-btn{padding:7px 6px;background:var(--card);border:2px solid transparent;border-radius:var(--radius);cursor:pointer;transition:all .2s;font-family:inherit;font-size:.82rem;font-weight:700;color:var(--text);letter-spacing:.2px;white-space:nowrap}
+.formation-btn:hover:not(.active){background:var(--card-hover)}
+.formation-btn.active{background:#ede9fe;border-color:var(--accent);color:var(--accent)}
+
+/* Progress */
+.progress{display:flex;align-items:center;gap:14px;margin-bottom:18px;font-size:1.05rem;color:var(--text-muted)}
+.progress-bar{flex:1;height:14px;background:var(--card);border-radius:7px;overflow:hidden}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--fr-blue),var(--accent),var(--es-red));transition:width .3s}
+.progress-text{font-weight:700;color:var(--text);white-space:nowrap;font-size:1.05rem}
+.progress-text .done{color:var(--accent)}
+
+.place-hint{font-size:.72rem;color:var(--text-muted);font-style:italic;margin-bottom:14px;line-height:1.4}
+
+/* Position tabs */
+.pos-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.pos-tab{padding:6px 10px;background:var(--card);border:2px solid transparent;border-radius:20px;cursor:pointer;transition:all .2s;font-family:inherit;font-size:.72rem;font-weight:700;color:var(--text-muted);letter-spacing:.2px;white-space:nowrap;flex-shrink:0;position:relative}
+.pos-tab:hover:not(.active){background:var(--card-hover)}
+.pos-tab.active{background:#ede9fe;border-color:var(--accent);color:var(--accent)}
+.pos-tab .tab-badge{display:inline-block;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:8px;font-size:.6rem;font-weight:800;color:#fff;background:var(--accent);margin-left:4px;padding:0 4px}
+.pos-tab .tab-badge.empty{background:#ccc}
+
+/* Player cards */
+.pos-panel{display:none}
+.pos-panel.active{display:block}
+.player-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.player-card{display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid transparent;border-radius:var(--radius);padding:6px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;min-width:0}
+.player-card:hover:not(.disabled){border-color:var(--accent);background:var(--card-hover)}
+.player-card.selected.fr{border-color:var(--fr-border);background:var(--card-selected-fr)}
+.player-card.selected.es{border-color:var(--es-border);background:var(--card-selected-es)}
+.player-card.disabled{opacity:.35;pointer-events:none}
+.player-card .avatar{width:30px;height:30px;border-radius:50%;border:2px solid rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.2px;background-size:cover;background-position:center top;background-repeat:no-repeat;background-color:#dfe3e8}
+.player-card .info{flex:1;min-width:0;overflow:hidden}
+.player-card .name{font-size:.72rem;font-weight:600;line-height:1.25}
+.player-card .name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-card .name .first{font-weight:400;color:var(--text-muted);font-size:.68rem}
+.player-card .flag{width:14px;height:10px;flex-shrink:0;border-radius:1px;object-fit:cover}
+.player-card .check{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;color:#fff;display:none;align-items:center;justify-content:center;font-size:.6rem;font-weight:700}
+.player-card.selected .check{display:flex}
+.player-card.selected.fr .check{background:var(--fr-blue)}
+.player-card.selected.es .check{background:var(--es-red)}
+
+/* Country indicator on card */
+.player-card .country-dot{position:absolute;bottom:4px;right:4px;width:8px;height:8px;border-radius:50%}
+.player-card .country-dot.fr{background:var(--fr-blue)}
+.player-card .country-dot.es{background:var(--es-red)}
+
+/* Pitch */
+.pitch-container{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.pitch-title{text-align:center;font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;line-height:1.4}
+.pitch-title strong{display:block;color:var(--accent);font-size:1rem;letter-spacing:2px;margin-top:2px}
+.pitch{position:relative;width:100%;padding-bottom:150%;background:linear-gradient(180deg,var(--pitch-dark) 0%,var(--pitch-green) 22%,var(--pitch-green) 78%,var(--pitch-dark) 100%);border-radius:8px;overflow:hidden;border:2px solid var(--pitch-line)}
+.pitch-lines{position:absolute;inset:0}
+.pitch-lines .halfway{position:absolute;top:50%;left:5%;right:5%;height:0;border-top:2px solid var(--pitch-line)}
+.pitch-lines .center-circle{position:absolute;top:50%;left:50%;width:22%;padding-bottom:22%;border-radius:50%;border:2px solid var(--pitch-line);transform:translate(-50%,-50%)}
+.pitch-lines .center-dot{position:absolute;top:50%;left:50%;width:5px;height:5px;border-radius:50%;background:var(--pitch-line);transform:translate(-50%,-50%)}
+.pitch-lines .box-top{position:absolute;top:0;left:22%;right:22%;height:14%;border:2px solid var(--pitch-line);border-top:none}
+.pitch-lines .box-bottom{position:absolute;bottom:0;left:22%;right:22%;height:14%;border:2px solid var(--pitch-line);border-bottom:none}
+.pitch-zones{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:4% 4%}
+.pitch-zone{display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:12px;min-height:0;flex:1}
+.pitch-zone.gk{flex:0 0 auto}
+.pitch-zone.spread{justify-content:space-between;padding:0 4%}
+
+.pitch-dot{display:flex;flex-direction:column;align-items:center;width:50px;transition:transform .2s;cursor:pointer}
+.pitch-dot .dot-circle{width:48px;height:48px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:800;color:#fff;letter-spacing:.3px;box-shadow:0 2px 6px rgba(0,0,0,.45)}
+.pitch-dot .dot-name{font-size:.64rem;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);margin-top:3px;line-height:1.05;text-align:center;white-space:nowrap}
+.pitch-dot.empty .dot-circle{border:2px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.08)!important;color:rgba(255,255,255,.45)}
+.pitch-dot.empty .dot-name{color:rgba(255,255,255,.4)}
+.pitch-dot.empty.active .dot-circle{border:2px solid var(--accent-light);background:rgba(109,40,217,.25)!important;color:#fff;box-shadow:0 0 0 3px rgba(109,40,217,.5)}
+.pitch-dot.empty.active .dot-name{color:var(--accent-light)}
+
+/* Counters */
+.team-counter{display:flex;justify-content:center;gap:16px;margin-bottom:14px;font-size:.78rem;font-weight:700}
+.team-counter .fr-count{color:var(--fr-blue)}
+.team-counter .es-count{color:var(--es-red)}
+.team-counter span{display:flex;align-items:center;gap:4px}
+
+/* Share */
+.share-section{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.share-section.locked{opacity:.5;pointer-events:none}
+.share-hint{text-align:center;font-size:.72rem;color:var(--text-muted);font-style:italic}
+.share-hint.hidden{display:none}
+.share-buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.share-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:11px 6px;border:none;border-radius:var(--radius);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;color:#fff;font-family:inherit}
+.share-btn:hover{opacity:.9;transform:translateY(-1px)}
+.share-btn.x{background:#000}
+.share-btn.fb{background:#1877f2}
+.share-btn.wa{background:#25d366}
+.share-btn.ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+.share-btn.dl{background:var(--accent);grid-column:1 / -1;padding:13px;font-size:.9rem}
+.reset-btn{display:block;width:100%;margin-top:14px;padding:9px;background:transparent;color:var(--text-muted);border:1px solid #ccc;border-radius:var(--radius);font-size:.78rem;cursor:pointer;transition:all .2s;font-family:inherit}
+.reset-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+@media(max-width:800px){
+  #squad-widget{flex-direction:column;padding:12px;gap:16px}
+  .pitch-panel{width:100%;position:static}
+  .pitch-panel .pitch-container{max-width:400px;margin:0 auto}
+  .pitch{padding-bottom:120%}
+  .player-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:600px){
+  .player-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .player-card{padding:7px;gap:7px}
+  .player-card .avatar{width:36px;height:36px}
+  .player-card .name{font-size:.72rem}
+  .pitch-dot{width:54px}
+  .pitch-dot .dot-circle{width:52px;height:52px;font-size:.78rem}
+  .pitch-dot .dot-name{font-size:.62rem}
+}
+@media(max-width:400px){
+  #squad-widget{padding:8px}
+  .player-card{padding:6px;gap:6px}
+  .player-card .avatar{width:32px;height:32px}
+  .player-card .name{font-size:.68rem}
+  .player-card .name .first{font-size:.62rem}
+  .pos-tabs{gap:3px}
+  .pos-tab{padding:5px 8px;font-size:.68rem}
+}
+</style>
+</head>
+<body>
+
+<div id="squad-widget">
+
+  <div class="selector-panel">
+
+    <div class="widget-header">
+      <h1><span class="fr">France</span> <span class="x">✕</span> <span class="es">Espagne</span> — XI Combined</h1>
+      <p>Compose le meilleur XI possible en mixant les deux sélections</p>
+    </div>
+
+    <div class="formation-bar">
+      <div class="formation-label">Schéma tactique</div>
+      <div class="formation-options" id="formationOptions"></div>
+    </div>
+
+    <div class="progress">
+      <div class="progress-text"><span class="done" id="totalSelected">0</span> / 11 titulaires</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="team-counter">
+      <span class="fr-count">🇫🇷 <span id="countFr">0</span></span>
+      <span class="es-count">🇪🇸 <span id="countEs">0</span></span>
+    </div>
+
+    <div class="place-hint">Clique sur un joueur pour le placer. Tu peux cliquer un emplacement sur le terrain pour choisir où le positionner.</div>
+
+    <div class="pos-tabs" id="posTabs"></div>
+    <div id="posPanels"></div>
+
+    <button class="reset-btn" onclick="resetAll()">↺ Réinitialiser</button>
+  </div>
+
+  <div class="pitch-panel">
+    <div class="pitch-container" id="pitchContainer">
+      <div class="pitch-title"><span id="pitchTitleText">Mon XI Combined</span><strong id="pitchFormationLabel">4-3-3</strong></div>
+      <div class="pitch" id="pitch">
+        <div class="pitch-lines">
+          <div class="halfway"></div>
+          <div class="center-circle"></div>
+          <div class="center-dot"></div>
+          <div class="box-top"></div>
+          <div class="box-bottom"></div>
+        </div>
+        <div class="pitch-zones" id="pitchZones"></div>
+      </div>
+    </div>
+
+    <div class="share-section locked" id="shareSection">
+      <div class="share-hint" id="shareHint">Complète ton XI pour partager</div>
+      <button class="share-btn dl" onclick="downloadImage()">📥 Télécharger l'image</button>
+      <div class="share-buttons">
+        <button class="share-btn x"  onclick="shareOn('x')">𝕏 Partager</button>
+        <button class="share-btn fb" onclick="shareOn('facebook')">Facebook</button>
+        <button class="share-btn wa" onclick="shareOn('whatsapp')">WhatsApp</button>
+        <button class="share-btn ig" onclick="shareOn('instagram')">Instagram</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const FORMATIONS = {
+  "4-3-3":   { label: "4-3-3",   lines: [ {pos:"att",count:3}, {pos:"mid",count:3}, {pos:"def",count:4}, {pos:"gk",count:1} ], tabQuota: { gk:1, rb:1, cb:2, lb:1, mid:3, att:3 } },
+  "4-2-3-1": { label: "4-2-3-1", lines: [ {pos:"att",count:1}, {pos:"mid",count:3}, {pos:"mid",count:2}, {pos:"def",count:4}, {pos:"gk",count:1} ], tabQuota: { gk:1, rb:1, cb:2, lb:1, mid:2, att:4 } }
+};
+
+const POSITION_TABS = [
+  { key: "gk",  label: "Gardiens",             posType: "gk" },
+  { key: "rb",  label: "Latéraux (droite)",     posType: "def" },
+  { key: "cb",  label: "Défenseurs centraux",   posType: "def" },
+  { key: "lb",  label: "Latéraux (gauche)",     posType: "def" },
+  { key: "mid", label: "Milieux de terrain",    posType: "mid" },
+  { key: "att", label: "Attaquants",            posType: "att" }
+];
+
+const POS_COLOR = { gk:"var(--pos-gk)", def:"var(--pos-def)", mid:"var(--pos-mid)", att:"var(--pos-att)" };
+
+const PLAYERS = {
+  gk: [
+    { id: 96227,    name: "Mike Maignan",       photo: "https://cdn.sportmonks.com/images/soccer/players/3/96227.png",      country: "fr" },
+    { id: 96030,    name: "Brice Samba",         photo: "https://cdn.sportmonks.com/images/soccer/players/30/96030.png",     country: "fr" },
+    { id: 37608935, name: "Robin Risser",        photo: "https://cdn.sportmonks.com/images/soccer/players/7/37608935.png",   country: "fr" },
+    { id: 187215,   name: "Unai Simón",          photo: "https://cdn.sportmonks.com/images/soccer/players/15/187215.png",    country: "es" },
+    { id: 3130,     name: "David Raya",          photo: "https://cdn.sportmonks.com/images/soccer/players/26/3130.png",      country: "es" },
+    { id: 16475841, name: "Joan García",         photo: "https://cdn.sportmonks.com/images/soccer/players/1/16475841.png",   country: "es" }
+  ],
+  rb: [
+    { id: 337394,   name: "Jules Koundé",        photo: "https://cdn.sportmonks.com/images/soccer/players/18/337394.png",    country: "fr" },
+    { id: 37317367, name: "Malo Gusto",           photo: "https://cdn.sportmonks.com/images/soccer/players/23/37317367.png",  country: "fr" },
+    { id: 8456257,  name: "Pedro Porro",          photo: "https://cdn.sportmonks.com/images/soccer/players/1/8456257.png",   country: "es" },
+    { id: 37551089, name: "Marc Pubill",          photo: "https://cdn.sportmonks.com/images/soccer/players/17/37551089.png", country: "es" },
+    { id: 186795,   name: "Marcos Llorente",      photo: "https://cdn.sportmonks.com/images/soccer/players/11/186795.png",   country: "es" }
+  ],
+  lb: [
+    { id: 186995,   name: "Theo Hernández",       photo: "https://cdn.sportmonks.com/images/soccer/players/19/186995.png",   country: "fr" },
+    { id: 95368,    name: "Lucas Digne",           photo: "https://cdn.sportmonks.com/images/soccer/players/8/95368.png",    country: "fr" },
+    { id: 186797,   name: "Lucas Hernández",       photo: "https://cdn.sportmonks.com/images/soccer/players/13/186797.png",  country: "fr" },
+    { id: 448448,   name: "Marc Cucurella",        photo: "https://cdn.sportmonks.com/images/soccer/players/0/448448.png",   country: "es" },
+    { id: 160208,   name: "Alejandro Grimaldo",   photo: "https://cdn.sportmonks.com/images/soccer/players/16/160208.png",  country: "es" }
+  ],
+  cb: [
+    { id: 17544737, name: "William Saliba",        photo: "https://cdn.sportmonks.com/images/soccer/players/1/17544737.png", country: "fr" },
+    { id: 100556,   name: "Ibrahima Konaté",       photo: "https://cdn.sportmonks.com/images/soccer/players/12/100556.png",  country: "fr" },
+    { id: 33685,    name: "Dayot Upamecano",       photo: "https://cdn.sportmonks.com/images/soccer/players/21/33685.png",   country: "fr" },
+    { id: 5666458,  name: "Maxence Lacroix",       photo: "https://cdn.sportmonks.com/images/soccer/players/26/5666458.png", country: "fr" },
+    { id: 186299,   name: "Aymeric Laporte",       photo: "https://cdn.sportmonks.com/images/soccer/players/27/186299.png",  country: "es" },
+    { id: 37656790, name: "Pau Cubarsí",           photo: "https://cdn.sportmonks.com/images/soccer/players/22/37656790.png",country: "es" },
+    { id: 4545389,  name: "Eric García",           photo: "https://cdn.sportmonks.com/images/soccer/players/13/4545389.png", country: "es" }
+  ],
+  mid: [
+    { id: 5270371,  name: "Aurélien Tchouaméni",  photo: "https://cdn.sportmonks.com/images/soccer/players/3/5270371.png",  country: "fr" },
+    { id: 1193,     name: "N'Golo Kanté",          photo: "https://cdn.sportmonks.com/images/soccer/players/9/1193.png",     country: "fr" },
+    { id: 37593237, name: "Warren Zaïre-Emery",   photo: "https://cdn.sportmonks.com/images/soccer/players/21/37593237.png",country: "fr" },
+    { id: 23738800, name: "Manu Koné",             photo: "https://cdn.sportmonks.com/images/soccer/players/16/23738800.png",country: "fr" },
+    { id: 95694,    name: "Adrien Rabiot",         photo: "https://cdn.sportmonks.com/images/soccer/players/14/95694.png",   country: "fr" },
+    { id: 21072805, name: "Rayan Cherki",          photo: "https://cdn.sportmonks.com/images/soccer/players/5/21072805.png", country: "fr" },
+    { id: 186910,   name: "Rodri",                 photo: "https://cdn.sportmonks.com/images/soccer/players/30/186910.png",  country: "es" },
+    { id: 37288001, name: "Pedri",                 photo: "https://cdn.sportmonks.com/images/soccer/players/1/37288001.png", country: "es" },
+    { id: 530762,   name: "Martín Zubimendi",     photo: "https://cdn.sportmonks.com/images/soccer/players/10/530762.png",  country: "es" },
+    { id: 32710,    name: "Mikel Merino",          photo: "https://cdn.sportmonks.com/images/soccer/players/6/32710.png",    country: "es" },
+    { id: 186735,   name: "Fabián Ruiz",           photo: "https://cdn.sportmonks.com/images/soccer/players/15/186735.png",  country: "es" },
+    { id: 37459030, name: "Gavi",                  photo: "https://cdn.sportmonks.com/images/soccer/players/22/37459030.png",country: "es" },
+    { id: 74060,    name: "Dani Olmo",             photo: "https://cdn.sportmonks.com/images/soccer/players/12/74060.png",   country: "es" }
+  ],
+  att: [
+    { id: 96611,    name: "Kylian Mbappé",        photo: "https://cdn.sportmonks.com/images/soccer/players/3/96611.png",    country: "fr" },
+    { id: 99000,    name: "Marcus Thuram",         photo: "https://cdn.sportmonks.com/images/soccer/players/24/99000.png",   country: "fr" },
+    { id: 32403,    name: "Ousmane Dembélé",      photo: "https://cdn.sportmonks.com/images/soccer/players/19/32403.png",   country: "fr" },
+    { id: 24799984, name: "Michael Olise",         photo: "https://cdn.sportmonks.com/images/soccer/players/16/24799984.png",country: "fr" },
+    { id: 37317369, name: "Bradley Barcola",       photo: "https://cdn.sportmonks.com/images/soccer/players/25/37317369.png",country: "fr" },
+    { id: 37590938, name: "Désiré Doué",          photo: "https://cdn.sportmonks.com/images/soccer/players/26/37590938.png",country: "fr" },
+    { id: 96950,    name: "Jean-Philippe Mateta",  photo: "https://cdn.sportmonks.com/images/soccer/players/22/96950.png",   country: "fr" },
+    { id: 37530901, name: "Maghnes Akliouche",    photo: "https://cdn.sportmonks.com/images/soccer/players/21/37530901.png",country: "fr" },
+    { id: 37656179, name: "Lamine Yamal",          photo: "https://cdn.sportmonks.com/images/soccer/players/19/37656179.png",country: "es" },
+    { id: 37297544, name: "Nico Williams",         photo: "https://cdn.sportmonks.com/images/soccer/players/8/37297544.png", country: "es" },
+    { id: 186932,   name: "Mikel Oyarzabal",       photo: "https://cdn.sportmonks.com/images/soccer/players/20/186932.png",  country: "es" },
+    { id: 448389,   name: "Ferran Torres",         photo: "https://cdn.sportmonks.com/images/soccer/players/5/448389.png",   country: "es" },
+    { id: 186864,   name: "Borja Iglesias",        photo: "https://cdn.sportmonks.com/images/soccer/players/16/186864.png",  country: "es" },
+    { id: 24468970, name: "Yéremy Pino",           photo: "https://cdn.sportmonks.com/images/soccer/players/10/24468970.png",country: "es" },
+    { id: 7698436,  name: "Álex Baena",           photo: "https://cdn.sportmonks.com/images/soccer/players/4/7698436.png",  country: "es" },
+    { id: 37595819, name: "Víctor Muñoz",         photo: "https://cdn.sportmonks.com/images/soccer/players/11/37595819.png",country: "es" }
+  ]
+};
+
+const TAB_TO_POS = { gk:"gk", rb:"def", lb:"def", cb:"def", mid:"mid", att:"att" };
+const SQUAD_TOTAL = 11;
+const FORMATION_KEYS = Object.keys(FORMATIONS);
+
+const state = {
+  formation: FORMATION_KEYS[0],
+  slots: [],
+  active: null,
+  activeTab: "gk"
+};
+
+function formationSlots() {
+  const slots = [];
+  FORMATIONS[state.formation].lines.forEach(line => {
+    for (let i = 0; i < line.count; i++) slots.push({ pos: line.pos, spread: !!line.spread });
+  });
+  return slots;
+}
+
+function rebuildSlots() {
+  const placed = (state.slots || []).filter(Boolean);
+  state.slots = formationSlots().map(() => null);
+  const order = fillOrder();
+  placed.forEach((item, i) => { if (i < order.length) state.slots[order[i]] = item; });
+  state.active = firstEmptySlot();
+}
+
+function totalSelected() { return state.slots.filter(Boolean).length; }
+function placedGk() { return state.slots.some(s => s && s.pos === "gk"); }
+function isPlaced(id) { return state.slots.some(s => s && s.player.id === id); }
+
+function fillOrder() {
+  const lines = FORMATIONS[state.formation].lines;
+  const perLine = [];
+  let idx = 0;
+  lines.forEach(line => {
+    const arr = [];
+    for (let i = 0; i < line.count; i++) arr.push(idx++);
+    perLine.push(arr);
+  });
+  const order = [];
+  for (let li = perLine.length - 1; li >= 0; li--) {
+    order.push(...perLine[li].slice().reverse());
+  }
+  return order;
+}
+
+function firstEmptySlot() {
+  const order = fillOrder();
+  for (const i of order) if (state.slots[i] === null) return i;
+  return -1;
+}
+
+function targetSlotFor() {
+  if (state.active != null && state.active >= 0 && state.slots[state.active] === null) {
+    return state.active;
+  }
+  return firstEmptySlot();
+}
+
+function isSquadValid() { return totalSelected() === SQUAD_TOTAL; }
+
+function getInitials(name) {
+  const parts = name.replace(/[-']/g, " ").trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function getLastName(name) {
+  const parts = name.trim().split(/\s+/);
+  return parts[parts.length - 1];
+}
+
+function getFirstName(name) {
+  const parts = name.trim().split(/\s+/);
+  parts.pop();
+  return parts.join(" ");
+}
+
+function countByCountry(c) {
+  return state.slots.filter(s => s && s.player.country === c).length;
+}
+
+function init() {
+  rebuildSlots();
+  renderFormationOptions();
+  renderTabs();
+  renderAllPanels();
+  renderPitch();
+  updateProgress();
+  updateShareState();
+}
+
+function renderFormationOptions() {
+  const el = document.getElementById("formationOptions");
+  el.innerHTML = FORMATION_KEYS.map(key => {
+    const cls = key === state.formation ? "active" : "";
+    return `<button class="formation-btn ${cls}" onclick="changeFormation('${key}')">${FORMATIONS[key].label}</button>`;
+  }).join("");
+}
+
+function changeFormation(key) {
+  if (!FORMATIONS[key] || key === state.formation) return;
+  state.formation = key;
+  state.slots = [];
+  rebuildSlots();
+  renderFormationOptions();
+  updateAllCards();
+  renderPitch();
+  updateProgress();
+  updateShareState();
+}
+
+function renderTabs() {
+  const el = document.getElementById("posTabs");
+  el.innerHTML = POSITION_TABS.map(t => {
+    const cls = t.key === state.activeTab ? "active" : "";
+    const count = PLAYERS[t.key].length;
+    return `<button class="pos-tab ${cls}" data-tab="${t.key}" onclick="switchTab('${t.key}')">${t.label} <span class="tab-badge" id="badge-${t.key}">${count}</span></button>`;
+  }).join("");
+}
+
+function switchTab(key) {
+  state.activeTab = key;
+  document.querySelectorAll(".pos-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === key));
+  document.querySelectorAll(".pos-panel").forEach(p => p.classList.toggle("active", p.dataset.panel === key));
+}
+
+function renderAllPanels() {
+  const container = document.getElementById("posPanels");
+  container.innerHTML = POSITION_TABS.map(t => {
+    const cls = t.key === state.activeTab ? "active" : "";
+    const cards = PLAYERS[t.key].map(p => cardHtml(t.key, p)).join("");
+    return `<div class="pos-panel ${cls}" data-panel="${t.key}">
+      <div class="player-grid">${cards}</div>
+    </div>`;
+  }).join("");
+  updateAllCards();
+}
+
+function cardHtml(tabKey, p) {
+  const firstName = getFirstName(p.name);
+  const lastName = getLastName(p.name);
+  const flag = p.country === "fr" ? "🇫🇷" : "🇪🇸";
+  return `<div class="player-card ${p.country}" data-tab="${tabKey}" data-id="${p.id}" data-country="${p.country}" onclick="selectPlayer('${tabKey}',${p.id})">
+    <div class="avatar" style="background-image:url('${p.photo}')"></div>
+    <div class="info"><div class="name">${firstName ? `<span class="first">${firstName}</span>` : ""}<span>${lastName}</span></div></div>
+    <span style="font-size:.7rem;flex-shrink:0">${flag}</span>
+    <div class="check">✓</div>
+  </div>`;
+}
+
+function selectPlayer(tabKey, id) {
+  const player = PLAYERS[tabKey].find(p => p.id === id);
+  if (!player) return;
+
+  const slotIdx = state.slots.findIndex(s => s && s.player.id === id);
+  if (slotIdx >= 0) {
+    state.slots[slotIdx] = null;
+    state.active = slotIdx;
+  } else {
+    const posType = TAB_TO_POS[tabKey];
+    if (posType === "gk" && placedGk()) return;
+    const target = targetSlotFor();
+    if (target < 0) return;
+    state.slots[target] = { player, pos: posType, tabKey };
+    state.active = firstEmptySlot();
+  }
+
+  updateAllCards();
+  renderPitch();
+  updateProgress();
+  updateShareState();
+
+  if (slotIdx < 0) autoAdvanceTab(tabKey);
+}
+
+function autoAdvanceTab(currentTab) {
+  const tabKeys = POSITION_TABS.map(t => t.key);
+  const curIdx = tabKeys.indexOf(currentTab);
+  if (curIdx < 0 || totalSelected() >= SQUAD_TOTAL) return;
+  const quota = FORMATIONS[state.formation].tabQuota || {};
+  const selectedInTab = (key) => PLAYERS[key].filter(p => isPlaced(p.id)).length;
+  if (selectedInTab(currentTab) < (quota[currentTab] || 1)) return;
+  for (let offset = 1; offset <= tabKeys.length; offset++) {
+    const idx = (curIdx + offset) % tabKeys.length;
+    const key = tabKeys[idx];
+    if (selectedInTab(key) >= (quota[key] || 1)) continue;
+    if (key === "gk" && placedGk()) continue;
+    switchTab(key);
+    return;
+  }
+}
+
+function updateAllCards() {
+  const full = totalSelected() >= SQUAD_TOTAL;
+  const gkPlaced = placedGk();
+
+  POSITION_TABS.forEach(t => {
+    const selected = PLAYERS[t.key].filter(p => isPlaced(p.id)).length;
+    const badge = document.getElementById("badge-" + t.key);
+    if (badge) {
+      badge.textContent = selected > 0 ? selected : PLAYERS[t.key].length;
+      badge.classList.toggle("empty", selected === 0);
+    }
+  });
+
+  document.querySelectorAll(".player-card").forEach(card => {
+    const tabKey = card.dataset.tab;
+    const id = parseInt(card.dataset.id);
+    const country = card.dataset.country;
+    const placed = isPlaced(id);
+    const posType = TAB_TO_POS[tabKey];
+    card.classList.toggle("selected", placed);
+    card.classList.toggle("disabled", !placed && (full || (posType === "gk" && gkPlaced)));
+  });
+
+  document.getElementById("countFr").textContent = countByCountry("fr");
+  document.getElementById("countEs").textContent = countByCountry("es");
+}
+
+function renderPitch() {
+  const f = FORMATIONS[state.formation];
+  document.getElementById("pitchFormationLabel").textContent = f.label;
+  const container = document.getElementById("pitchZones");
+
+  let idx = 0;
+  container.innerHTML = f.lines.map(line => {
+    let dots = "";
+    for (let i = 0; i < line.count; i++) {
+      const slotIndex = idx++;
+      const item = state.slots[slotIndex];
+      dots += item ? filledDot(item.player, item.pos, slotIndex) : emptyDot(line.pos, slotIndex);
+    }
+    const _g = {2:40,3:40,4:25}[line.count];
+    const _gs = (_g != null && !line.spread) ? ` style="gap:${_g}px"` : "";
+    return `<div class="pitch-zone ${line.pos}${line.spread ? " spread" : ""}"${_gs}>${dots}</div>`;
+  }).join("");
+}
+
+function filledDot(player, pos, slotIndex) {
+  const lastName = getLastName(player.name);
+  const _nm = lastName.includes("-") ? lastName.replace(/-/g, "-<br>") : lastName;
+  const dotColor = player.country === "fr" ? "var(--fr-blue)" : "var(--es-red)";
+  const circleStyle = player.photo
+    ? `background-image:url('${player.photo}');background-size:cover;background-position:center top`
+    : `background:${dotColor}`;
+  return `<div class="pitch-dot" data-pos="${pos}" onclick="clickSlot(${slotIndex})" title="Retirer ${player.name}">
+    <div class="dot-circle" style="${circleStyle};border-color:${player.country === 'fr' ? '#3b82f6' : '#ef4444'}">${player.photo ? "" : getInitials(player.name)}</div>
+    <div class="dot-name">${_nm}</div>
+  </div>`;
+}
+
+function emptyDot(pos, slotIndex) {
+  const active = state.active === slotIndex ? " active" : "";
+  return `<div class="pitch-dot empty${active}" data-pos="${pos}" onclick="clickSlot(${slotIndex})">
+    <div class="dot-circle">+</div>
+    <div class="dot-name">—</div>
+  </div>`;
+}
+
+function clickSlot(i) {
+  if (state.slots[i]) {
+    state.slots[i] = null;
+    state.active = i;
+  } else {
+    state.active = (state.active === i) ? null : i;
+  }
+  updateAllCards();
+  renderPitch();
+  updateProgress();
+  updateShareState();
+}
+
+function updateProgress() {
+  const total = totalSelected();
+  document.getElementById("totalSelected").textContent = total;
+  document.getElementById("progressFill").style.width = (total / SQUAD_TOTAL * 100) + "%";
+}
+
+function updateShareState() {
+  const ready = isSquadValid();
+  document.getElementById("shareSection").classList.toggle("locked", !ready);
+  document.getElementById("shareHint").classList.toggle("hidden", ready);
+}
+
+function resetAll() {
+  state.formation = FORMATION_KEYS[0];
+  state.slots = [];
+  rebuildSlots();
+  renderFormationOptions();
+  updateAllCards();
+  renderPitch();
+  updateProgress();
+  updateShareState();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ═══ Parent URL + iframe resize ═══ */
+let _parentUrl = null;
+function getShareUrl() {
+  if (_parentUrl) return _parentUrl;
+  try { if (window.top && window.top !== window.self && window.top.location.href) return window.top.location.href; } catch (e) { if (document.referrer) return document.referrer; }
+  return window.location.href;
+}
+window.addEventListener('message', (e) => {
+  if (e.source !== window.parent) return;
+  if (e.data && (e.data.type === 'wc2026-url' || e.data.type === 'xilegende-url') && e.data.url) _parentUrl = e.data.url;
+});
+function setupAutoResize() {
+  if (window.parent === window) return;
+  let PARENT_ORIGIN = '*';
+  try { if (document.referrer) PARENT_ORIGIN = new URL(document.referrer).origin; } catch (e) {}
+  const postHeight = () => {
+    const widget = document.getElementById('squad-widget');
+    const h = widget ? Math.ceil(widget.getBoundingClientRect().bottom + window.scrollY) : Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+    window.parent.postMessage({ type: 'wc2026-resize', height: h }, PARENT_ORIGIN);
+    window.parent.postMessage({ type: 'xilegende-resize', height: h }, PARENT_ORIGIN);
+  };
+  postHeight();
+  window.addEventListener('resize', postHeight);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(postHeight).observe(document.body);
+  window.parent.postMessage({ type: 'wc2026-getUrl' }, PARENT_ORIGIN);
+  window.parent.postMessage({ type: 'xilegende-getUrl' }, PARENT_ORIGIN);
+}
+
+/* ═══ Image & Share ═══ */
+async function generateImage() {
+  const pitchEl = document.getElementById("pitchContainer");
+  await new Promise(r => requestAnimationFrame(r));
+  const canvas = await html2canvas(pitchEl, { backgroundColor: "#f5f5f5", scale: 4, useCORS: true, allowTaint: true, logging: false, imageTimeout: 15000 });
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(b => { if (b) resolve(b); else reject(new Error("Canvas non exportable.")); }, "image/png");
+  });
+}
+
+async function downloadImage() {
+  try {
+    const blob = await generateImage();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "xi-combined-france-espagne-cdm2026.png";
+    a.click();
+  } catch (e) {
+    console.error("html2canvas error:", e);
+    alert(location.protocol === "file:" ? "La capture locale est bloquée en file://. Lance un serveur local." : "Erreur : " + (e.message || e));
+  }
+}
+
+function shareOn(platform) {
+  const text = encodeURIComponent("Voici mon XI Combined France × Espagne pour la Coupe du Monde 2026 ! Et toi, quel est ton mix idéal ? Compose le tien ici :");
+  const url = encodeURIComponent(getShareUrl());
+  const urls = {
+    x: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`,
+    whatsapp: `https://wa.me/?text=${text}%20${url}`
+  };
+  if (platform === "instagram") { downloadImage(); alert("Image téléchargée ! Partage-la directement sur Instagram."); return; }
+  if (urls[platform]) window.open(urls[platform], "_blank", "width=600,height=400");
+}
+
+init();
+setupAutoResize();
+</script>
+</body>
+</html>
