@@ -284,6 +284,32 @@ const TAB_TO_POS = { gk:"gk", rb:"def", lb:"def", cb:"def", mid:"mid", att:"att"
 const SQUAD_TOTAL = 11;
 const FORMATION_KEYS = Object.keys(FORMATIONS);
 
+const FORMATION_EXTRAS = {
+  "4-2-3-1": {
+    att: [
+      { id: 37255840, name: "Jude Bellingham",       photo: "https://cdn.sportmonks.com/images/soccer/players/0/37255840.png",   country: "en" }
+    ]
+  },
+  "4-4-2": {
+    mid: [
+      { id: 16827155, name: "Bukayo Saka",           photo: "https://cdn.sportmonks.com/images/soccer/players/19/16827155.png",  country: "en" },
+      { id: 25217662, name: "Noni Madueke",          photo: "https://cdn.sportmonks.com/images/soccer/players/30/25217662.png",  country: "en" },
+      { id: 9611543,  name: "Anthony Gordon",        photo: "https://cdn.sportmonks.com/images/soccer/players/23/9611543.png",   country: "en" },
+      { id: 215532,   name: "Nico González",        photo: "https://cdn.sportmonks.com/images/soccer/players/12/215532.png",    country: "ar" },
+      { id: 19996814, name: "Thiago Almada",         photo: "https://cdn.sportmonks.com/images/soccer/players/14/19996814.png",  country: "ar" },
+      { id: 37577657, name: "Giuliano Simeone",     photo: "https://cdn.sportmonks.com/images/soccer/players/25/37577657.png",  country: "ar" }
+    ]
+  }
+};
+
+function getVisiblePlayers(tabKey) {
+  const base = PLAYERS[tabKey];
+  const extras = (FORMATION_EXTRAS[state.formation] || {})[tabKey] || [];
+  if (!extras.length) return base;
+  const baseIds = new Set(base.map(p => p.id));
+  return [...base, ...extras.filter(p => !baseIds.has(p.id))];
+}
+
 const state = {
   formation: FORMATION_KEYS[0],
   slots: [],
@@ -373,7 +399,7 @@ function changeFormation(key) {
   state.slots = [];
   rebuildSlots();
   renderFormationOptions();
-  updateAllCards();
+  renderAllPanels();
   renderPitch();
   updateProgress();
   updateShareState();
@@ -383,7 +409,7 @@ function renderTabs() {
   const el = document.getElementById("posTabs");
   el.innerHTML = POSITION_TABS.map(t => {
     const cls = t.key === state.activeTab ? "active" : "";
-    const count = PLAYERS[t.key].length;
+    const count = getVisiblePlayers(t.key).length;
     return `<button class="pos-tab ${cls}" data-tab="${t.key}" onclick="switchTab('${t.key}')">${t.label} <span class="tab-badge" id="badge-${t.key}">${count}</span></button>`;
   }).join("");
 }
@@ -398,7 +424,7 @@ function renderAllPanels() {
   const container = document.getElementById("posPanels");
   container.innerHTML = POSITION_TABS.map(t => {
     const cls = t.key === state.activeTab ? "active" : "";
-    const cards = PLAYERS[t.key].map(p => cardHtml(t.key, p)).join("");
+    const cards = getVisiblePlayers(t.key).map(p => cardHtml(t.key, p)).join("");
     return `<div class="pos-panel ${cls}" data-panel="${t.key}"><div class="player-grid">${cards}</div></div>`;
   }).join("");
   updateAllCards();
@@ -417,11 +443,12 @@ function cardHtml(tabKey, p) {
 }
 
 function selectPlayer(tabKey, id) {
-  const player = PLAYERS[tabKey].find(p => p.id === id);
+  const player = getVisiblePlayers(tabKey).find(p => p.id === id);
   if (!player) return;
 
   const slotIdx = state.slots.findIndex(s => s && s.player.id === id);
   if (slotIdx >= 0) {
+    if (state.slots[slotIdx].tabKey !== tabKey) return;
     state.slots[slotIdx] = null;
     state.active = slotIdx;
   } else {
@@ -446,7 +473,7 @@ function autoAdvanceTab(currentTab) {
   const curIdx = tabKeys.indexOf(currentTab);
   if (curIdx < 0 || totalSelected() >= SQUAD_TOTAL) return;
   const quota = FORMATIONS[state.formation].tabQuota || {};
-  const selectedInTab = (key) => PLAYERS[key].filter(p => isPlaced(p.id)).length;
+  const selectedInTab = (key) => getVisiblePlayers(key).filter(p => isPlaced(p.id)).length;
   if (selectedInTab(currentTab) < (quota[currentTab] || 1)) return;
   for (let offset = 1; offset <= tabKeys.length; offset++) {
     const idx = (curIdx + offset) % tabKeys.length;
@@ -463,10 +490,11 @@ function updateAllCards() {
   const gkPlaced = placedGk();
 
   POSITION_TABS.forEach(t => {
-    const selected = PLAYERS[t.key].filter(p => isPlaced(p.id)).length;
+    const visible = getVisiblePlayers(t.key);
+    const selected = visible.filter(p => isPlaced(p.id)).length;
     const badge = document.getElementById("badge-" + t.key);
     if (badge) {
-      badge.textContent = selected > 0 ? selected : PLAYERS[t.key].length;
+      badge.textContent = selected > 0 ? selected : visible.length;
       badge.classList.toggle("empty", selected === 0);
     }
   });
@@ -476,8 +504,10 @@ function updateAllCards() {
     const id = parseInt(card.dataset.id);
     const placed = isPlaced(id);
     const posType = TAB_TO_POS[tabKey];
-    card.classList.toggle("selected", placed);
-    card.classList.toggle("disabled", !placed && (full || (posType === "gk" && gkPlaced)));
+    const slot = placed ? state.slots.find(s => s && s.player.id === id) : null;
+    const placedElsewhere = placed && slot && slot.tabKey !== tabKey;
+    card.classList.toggle("selected", placed && !placedElsewhere);
+    card.classList.toggle("disabled", placedElsewhere || (!placed && (full || (posType === "gk" && gkPlaced))));
   });
 
   document.getElementById("countEn").textContent = countByCountry("en");
@@ -506,7 +536,7 @@ function renderPitch() {
 function filledDot(player, pos, slotIndex) {
   const lastName = getLastName(player.name);
   const _nm = lastName.includes("-") ? lastName.replace(/-/g, "-<br>") : lastName;
-  const borderColor = player.country === "en" ? "#3b82f6" : "#34d399";
+  const borderColor = player.country === "en" ? "#e30613" : "#7dd3fc";
   const circleStyle = player.photo
     ? `background-image:url('${player.photo}');background-size:cover;background-position:center top`
     : `background:${player.country === "en" ? "var(--en-color)" : "var(--ar-color)"}`;
